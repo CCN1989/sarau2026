@@ -43,12 +43,15 @@ body::before {
 
 /* Banner superior */
 .cabecalho {
+  display: block;
   width: 100%;
   height: 280px;
-  background-image: url('https://raw.githubusercontent.com/NossoEventoRS/Imagens/refs/heads/main/banner%20sarau.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  object-fit: cover;
+  object-position: center;
+}
+/* Celulares/tablets: mostra o banner inteiro, sem cortar as laterais */
+@media (max-width: 768px) {
+  .cabecalho { height: auto; object-fit: contain; }
 }
 
 main {
@@ -235,7 +238,7 @@ footer {
 </div>
 
 <header>
-  <div class="cabecalho" role="img" aria-label="1º Sarau de Chinocas Gaúcho"></div>
+  <img class="cabecalho" src="https://raw.githubusercontent.com/NossoEventoRS/Imagens/refs/heads/main/banner%20sarau.png" alt="1º Sarau de Chinocas Gaúcho">
   <div id="contadorInscricao">⏳ Encerramento das inscrições... <span id="tempoRestante"></span></div>
 </header>
 
