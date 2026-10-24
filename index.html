@@ -43,15 +43,12 @@ body::before {
 
 /* Banner superior */
 .cabecalho {
-  display: block;
   width: 100%;
-  height: 280px;
-  object-fit: cover;
-  object-position: center;
-}
-/* Celulares/tablets: mostra o banner inteiro, sem cortar as laterais */
-@media (max-width: 768px) {
-  .cabecalho { height: auto; object-fit: contain; }
+  height: 250px;
+  background-image: url('https://raw.githubusercontent.com/NossoEventoRS/Imagens/refs/heads/main/banner%20sarau.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 main {
@@ -124,6 +121,24 @@ textarea { resize: vertical; min-height: 110px; }
   object-fit: cover;
 }
 .dica { font-size: 12px; color: #8a6360; }
+
+/* Regulamento */
+.regulamento-box { display: flex; flex-direction: column; gap: 14px; }
+.btn-regulamento {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 12px 20px;
+  background: var(--rosa-forte);
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 10px;
+}
+.btn-regulamento:hover { background: var(--rosa-hover); color: #3d1613; transition: 0.2s; }
+.aceite { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.4; }
+.aceite input { width: 20px; height: 20px; margin: 2px 0 0 0; flex: 0 0 auto; accent-color: var(--rosa-forte); }
+.aceite.desabilitado { opacity: .55; }
+#avisoRegulamento { font-size: 12px; color: #8a6360; }
 
 /* Botões finais */
 .botoes-final {
@@ -238,7 +253,7 @@ footer {
 </div>
 
 <header>
-  <img class="cabecalho" src="https://raw.githubusercontent.com/NossoEventoRS/Imagens/refs/heads/main/banner%20sarau.png" alt="1º Sarau de Chinocas Gaúcho">
+  <div class="cabecalho" role="img" aria-label="1º Sarau de Chinocas Gaúcho"></div>
   <div id="contadorInscricao">⏳ Encerramento das inscrições... <span id="tempoRestante"></span></div>
 </header>
 
@@ -316,6 +331,18 @@ footer {
 </table>
 </div>
 
+<div class="section-title">Regulamento</div>
+<div class="category-box">
+<div class="regulamento-box">
+  <a class="btn-regulamento" id="btnRegulamento" href="#" target="_blank" rel="noopener">⬇ BAIXAR O REGULAMENTO</a>
+  <label class="aceite desabilitado" id="labelAceite">
+    <input type="checkbox" id="aceiteRegulamento" disabled>
+    <span>Li e estou de acordo com o regulamento do evento. *</span>
+  </label>
+  <div id="avisoRegulamento">Baixe o regulamento para liberar a caixa de confirmação.</div>
+</div>
+</div>
+
 <div class="botoes-final">
   <button type="button" class="btn-submit" id="btnEnviar" onclick="enviarInscricao()">ENVIAR INSCRIÇÃO</button>
   <a class="btn-voltar" id="btnVoltar" href="#">VOLTAR AO SITE</a>
@@ -330,9 +357,10 @@ footer {
 
 <script>
 // ===== CONFIGURAÇÕES (preencher na etapa do Google Script) =====
-const URL_GS = "";                 // URL do Web App do Google Apps Script
+const URL_GS = "https://script.google.com/macros/s/AKfycbzcUtnNITyzmR5F58zWThpRfGoPbLqEIKP7MD-MqI1BnUfoJ6y04fGaEfMby5jPObBY/exec";                 // URL do Web App do Google Apps Script
+const URL_REGULAMENTO = "https://drive.google.com/uc?export=download&id=1WMCsSsNJIff9eY9qyMCDuusJzGpaq62f"; // regulamento no Google Drive (download direto)
 const URL_SITE = "https://www.ctgchamanativa.com.br/";               // link do site do evento (botão "Voltar ao site")
-const ENCERRAMENTO = '2026-11-15T23:59:59-03:00'; // fim das inscrições (null = sem contador)
+const ENCERRAMENTO = '2026-11-20T23:59:59-03:00'; // fim das inscrições (null = sem contador)
 const TAMANHO_MAX_FOTO = 5 * 1024 * 1024; // 5 MB
 // ================================================================
 
@@ -430,11 +458,36 @@ function lerArquivoBase64(arquivo) {
     });
 }
 
+/* ---------- Regulamento: download obrigatório antes do aceite ---------- */
+(function () {
+    const link = document.getElementById("btnRegulamento");
+    const chk = document.getElementById("aceiteRegulamento");
+    const lbl = document.getElementById("labelAceite");
+    const aviso = document.getElementById("avisoRegulamento");
+    link.href = URL_REGULAMENTO;
+    link.addEventListener("click", () => {
+        chk.disabled = false;
+        lbl.classList.remove("desabilitado");
+        aviso.textContent = "Regulamento baixado. Marque a caixa para confirmar a leitura.";
+    });
+})();
+
 /* ---------- Envio ---------- */
 async function enviarInscricao() {
     const form = document.getElementById("formInscricao");
     const btn = document.getElementById("btnEnviar");
 
+    const chk = document.getElementById("aceiteRegulamento");
+    if (chk.disabled) {
+        alert("Baixe o regulamento e confirme a leitura para continuar.");
+        document.getElementById("btnRegulamento").focus();
+        return;
+    }
+    if (!chk.checked) {
+        alert("Para se inscrever, marque que leu e concorda com o regulamento.");
+        chk.focus();
+        return;
+    }
     if (!form.checkValidity()) {
         form.reportValidity();
         return;
@@ -468,6 +521,7 @@ async function enviarInscricao() {
             padrinho: document.getElementById("padrinho").value.trim(),
             relato: document.getElementById("relato").value.trim(),
             frase: document.getElementById("frase").value.trim(),
+            aceiteRegulamento: true,
             foto: { nome: arquivo.name, tipo: arquivo.type, base64: fotoBase64 }
         };
 
